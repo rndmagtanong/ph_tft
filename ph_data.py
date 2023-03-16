@@ -7,17 +7,23 @@ def get_challengers(api_key: 'string') -> 'json':
     ph_challengers_url =  'https://ph2.api.riotgames.com/tft/league/v1/challenger'
     ph_challengers_url = ph_challengers_url + '?api_key=' + api_key
 
-    ph_challengers_resp = requests.get(ph_challengers_url)
-    challengers_info = ph_challengers_resp.json()
-    return challengers_info
+    try:
+        ph_challengers_resp = requests.get(ph_challengers_url, timeout = 127)
+        challengers_info = ph_challengers_resp.json()
+        return challengers_info
+    except:
+        print('Request has timed out.')
 
 def get_gms(api_key):
     ph_gm_url = 'https://ph2.api.riotgames.com/tft/league/v1/grandmaster'
     ph_gm_url = ph_gm_url + '?api_key=' + api_key
 
-    ph_gm_resp = requests.get(ph_gm_url)
-    gm_info = ph_gm_resp.json()
-    return gm_info
+    try:
+        ph_gm_resp = requests.get(ph_gm_url, timeout = 127)
+        gm_info = ph_gm_resp.json()
+        return gm_info
+    except:
+        print('Request has timed out.')
 
 def get_names(players):
     player_names = []
@@ -33,7 +39,7 @@ def get_puuid(names):
     for name in names:
         puuid_url = 'https://ph2.api.riotgames.com/tft/summoner/v1/summoners/by-name/'
         puuid_url = puuid_url + name + '?api_key=' + api_key
-        puuid_resp = requests.get(puuid_url)
+        puuid_resp = requests.get(puuid_url, timeout = 127)
         puuids += [dict(puuid_resp.json())]
 
     final_puuids = []
@@ -47,16 +53,18 @@ def get_match_ids(puuids):
     for puuid in puuids:
         match_url = 'https://sea.api.riotgames.com/tft/match/v1/matches/by-puuid/'
         match_url += puuid + '/ids?start=0&count=50&api_key=' + api_key
-        match_resp = requests.get(match_url)
+        match_resp = requests.get(match_url, timeout = 127)
         match_ids += match_resp.json()
 
     return match_ids
 
 def get_match_data(match_ids):
-    holder = pd.DataFrame()
+
+    match_data = pd.DataFrame()
+
     for match in match_ids:
         match_url = 'https://sea.api.riotgames.com/tft/match/v1/matches/' + match + '?api_key=' + api_key
-        match_resp = requests.get(match_url).json()
+        match_resp = requests.get(match_url, timeout = 127).json()
 
         flat_match_resp = flatten(match_resp)
         keyList = list(flat_match_resp.keys())
@@ -115,24 +123,16 @@ def get_match_data(match_ids):
         player7 = player7.select_dtypes(exclude=['object'])
         player8 = player8.select_dtypes(exclude=['object'])
 
-        # player1 = player1.merge(player2, how = 'outer', left_index = True)
-        # player1 = player1.merge(player3, how = 'outer', left_index = True)
-        # player1 = player1.merge(player4, how = 'outer', left_index = True)
-        # player1 = player1.merge(player5, how = 'outer', left_index = True)
-        # player1 = player1.merge(player6, how = 'outer', left_index = True)
-        # player1 = player1.merge(player7, how = 'outer', left_index = True)
-        # player1 = player1.merge(player8, how = 'outer', left_index = True)
+        match_data = pd.concat([match_data, player1], ignore_index = True)
+        match_data = pd.concat([match_data, player2], ignore_index = True)
+        match_data = pd.concat([match_data, player3], ignore_index = True)
+        match_data = pd.concat([match_data, player4], ignore_index = True)
+        match_data = pd.concat([match_data, player5], ignore_index = True)
+        match_data = pd.concat([match_data, player6], ignore_index = True)
+        match_data = pd.concat([match_data, player7], ignore_index = True)
+        match_data = pd.concat([match_data, player8], ignore_index = True)
 
-        holder = pd.concat([holder, player1], ignore_index = True)
-        holder = pd.concat([holder, player2], ignore_index = True)
-        holder = pd.concat([holder, player3], ignore_index = True)
-        holder = pd.concat([holder, player4], ignore_index = True)
-        holder = pd.concat([holder, player5], ignore_index = True)
-        holder = pd.concat([holder, player6], ignore_index = True)
-        holder = pd.concat([holder, player7], ignore_index = True)
-        holder = pd.concat([holder, player8], ignore_index = True)
-
-    return holder
+    return match_data
 
 ### data pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -209,7 +209,7 @@ class DescribeMissing(BaseEstimator, TransformerMixin):
     
 from sklearn.pipeline import Pipeline
 
-pipe_unprocessed = Pipeline([
+pipe_analysis = Pipeline([
        ("double_up_dropper", DoubleUpDropper()),
        ("nandrop", NaNDropper()),
        ("corruptdropper", CorruptedDropper()),
@@ -244,26 +244,48 @@ class OutlierRemover(BaseEstimator, TransformerMixin):
         # remove outliers (10% threshold to not remove level 8 data)
         threshold = int(len(X) * 0.1)
         X = X.dropna(axis = 1, thresh = threshold)
+        
+        return X
 
-def simple_data_pipeline(match_data, filename):
+class GetAugmentDummies(BaseEstimator, TransformerMixin):
+    def fit(self, X, y = None):
+        return self
+    
+    def transform(self, X):
+        augments = ['augments_0', 'augments_1', 'augments_2']
+        X = pd.get_dummies(X, columns = augments)
+
+        return X
+
+pipe_ml = Pipeline([
+        ("name_dropper", TrainDropper()),
+        ("outlier_dropper", OutlierRemover()),
+        ("augmentdummies", GetAugmentDummies())
+])
+
+def use_data_pipeline(match_data, filename):
+
+    # use pipeline for data analysis
+    pipe_analysis = Pipeline([
+       ("double_up_dropper", DoubleUpDropper()),
+       ("nandrop", NaNDropper()),
+       ("corruptdropper", CorruptedDropper()),
+       ("resetindex", ResetIndex()),
+       ("nanpercent", DescribeMissing())
+    ])
+
+    match_data = pipe_analysis.fit_transform(match_data)
 
     # write csv for data analysis
     match_data.to_csv('unprocessed_' + filename + '.csv', index = False)
 
-    # # remove features that don't help with training the data
-    # non_training_features = ['companion_content_ID', 'companion_item_ID',
-    #                          'companion_skin_ID', 'companion_species',
-    #                          'gold_left', 'players_eliminated']
-    
-    # for feature in non_training_features:
-    #     try:
-    #         match_data = match_data.drop(feature, axis = 'columns')
-    #     except:
-    #         continue
+    pipe_ml = Pipeline([
+            ("name_dropper", TrainDropper()),
+            ("outlier_dropper", OutlierRemover()),
+            ("augmentdummies", GetAugmentDummies())
+    ])
 
-    # remove outliers (10% threshold to not remove level 8 data)
-    threshold = int(len(match_data) * 0.1)
-    match_data = match_data.dropna(axis = 1, thresh = threshold)
+    match_data = pipe_ml.fit_transform(match_data)
 
     # write csv for placement estimator
     match_data.to_csv('processed_' + filename + '.csv', index = False)
@@ -273,7 +295,10 @@ def simple_data_pipeline(match_data, filename):
 if __name__ == "__main__":
 
     print('Enter API key:')
-    api_key = str(input())
+    api_key = ''
+
+    while api_key == '':
+        api_key = str(input())
 
     try:
         challengers = get_challengers(api_key)
@@ -284,7 +309,7 @@ if __name__ == "__main__":
         chall_matches = list(dict.fromkeys(chall_matches))
         chall_match_data = get_match_data(chall_matches)
 
-        processed_chall_match_data = simple_data_pipeline(chall_match_data, 'challenger_match_data')
+        processed_chall_match_data = use_data_pipeline(chall_match_data, 'challenger_match_data')
 
         gms = get_gms(api_key)
         gm_names = get_names(gms)
@@ -293,7 +318,8 @@ if __name__ == "__main__":
         gm_matches = list(dict.fromkeys(gm_matches))
         gm_match_data = get_match_data(gm_matches)
 
-        processed_gm_match_data = simple_data_pipeline(gm_match_data, 'gm_match_data')
+        processed_gm_match_data = use_data_pipeline(gm_match_data, 'gm_match_data')
+        
     except:
         print('Error occurred during ETL process.')
 
