@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import requests
 from flatten_json import flatten
 
@@ -133,50 +134,101 @@ def get_match_data(match_ids):
 
     return holder
 
-def simple_pipeline(match_data, filename):
+def percent_missing_data(match_data):
+    # get number of missing data points per column
+    missing_values_count = match_data.isnull().sum()
+
+    # how many missing values do we have?
+    total_cells = np.product(match_data.shape)
+    total_missing = missing_values_count.sum()
+
+    # percent of missing data
+    percent_missing = (total_missing / total_cells) * 100
+    print('Percent Missing of Data: ' + str(percent_missing))
+
+def simple_data_pipeline(match_data, filename):
     # drop columns from double up
-    match_data = match_data[match_data.partner_group_id.isnull()]
+    match_data = match_data[match_data['partner_group_id'].isnull()]
 
     # drop all empty rows and columns
-    match_data.dropna(how = 'all').dropna(axis = 'columns', how = 'all')
+    match_data = match_data.dropna(how = 'all').dropna(axis = 'columns', how = 'all')
+
+    # remove corrupted features
+    corrupted_features = ['units_5_items_0', 'units_5_items_1',	
+                          'units_5_items_2', 'units_6_items_0',
+                          'units_6_items_1', 'units_6_items_2',
+                          'units_7_items_0', 'units_7_items_1',	
+                          'units_7_items_2', 'units_3_items_0',
+                          'units_3_items_1', 'units_0_items_0',
+                          'units_1_items_0', 'units_1_items_1',	
+                          'units_2_items_0', 'units_2_items_1',	
+                          'units_2_items_2', 'units_1_items_2',
+                          'units_4_items_0', 'units_4_items_1',	
+                          'units_4_items_2', 'units_0_items_1',	
+                          'units_3_items_2', 'units_0_items_2',	
+                          'units_8_items_0', 'units_8_items_1',	
+                          'units_8_items_2']
+    for feature in corrupted_features:
+        try:
+            match_data = match_data.drop(feature, axis = 'columns')
+        except:
+            continue
+
+    # reindex dataframe
+    match_data.reset_index(drop = True)
+
+    # describe missing data
+    percent_missing_data(match_data)
 
     # write csv for data analysis
-    match_data.to_csv('unprocessed_' + filename, index = True)
+    match_data.to_csv('unprocessed_' + filename + '.csv', index = False)
 
     # remove features that don't help with training the data
     non_training_features = ['companion_content_ID', 'companion_item_ID',
                              'companion_skin_ID', 'companion_species',
                              'gold_left', 'players_eliminated']
+    
     for feature in non_training_features:
         try:
-            match_data.drop(feature, axis = 'columns', inplace = True)
+            match_data = match_data.drop(feature, axis = 'columns')
         except:
             continue
 
+    # remove outliers (10% threshold to not remove level 8 data)
+    threshold = int(len(match_data) * 0.1)
+    match_data = match_data.dropna(axis = 1, thresh = threshold)
+
     # write csv for placement estimator
-    match_data.to_csv('processed_' + filename, index = True)
+    match_data.to_csv('processed_' + filename + '.csv', index = False)
+
+    return match_data
 
 if __name__ == "__main__":
 
     print('Enter API key:')
-    api_key = input()
+    api_key = str(input())
 
-    challengers = get_challengers(api_key)
-    chall_names = get_names(challengers)
-    chall_puuids = get_puuid(chall_names)
-    chall_matches = get_match_ids(chall_puuids)
-    # remove duplicate matches
-    chall_matches = list(dict.fromkeys(chall_matches))
-    chall_match_data = get_match_data(chall_matches)
-    chall_match_data.to_csv('chall_match_data.csv', index = True)
+    try:
+        challengers = get_challengers(api_key)
+        chall_names = get_names(challengers)
+        chall_puuids = get_puuid(chall_names)
+        chall_matches = get_match_ids(chall_puuids)
+        # remove duplicate matches
+        chall_matches = list(dict.fromkeys(chall_matches))
+        chall_match_data = get_match_data(chall_matches)
 
-    gms = get_gms(api_key)
-    gm_names = get_names(gms)
-    gm_puuids = get_puuid(gm_names)
-    gm_matches = get_match_ids(gm_puuids)
-    gm_matches = list(dict.fromkeys(gm_matches))
-    gm_match_data = get_match_data(gm_matches)
-    gm_match_data.to_csv('gm_match_data.csv', index = True)
+        processed_chall_match_data = simple_data_pipeline(chall_match_data, 'challenger_match_data')
+
+        gms = get_gms(api_key)
+        gm_names = get_names(gms)
+        gm_puuids = get_puuid(gm_names)
+        gm_matches = get_match_ids(gm_puuids)
+        gm_matches = list(dict.fromkeys(gm_matches))
+        gm_match_data = get_match_data(gm_matches)
+
+        processed_gm_match_data = simple_data_pipeline(gm_match_data, 'gm_match_data')
+    except:
+        print('Error occurred during ETL process.')
 
 
 
