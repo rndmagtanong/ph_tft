@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 from flatten_json import flatten
 
-def get_challengers(api_key):
+def get_challengers(api_key: 'string') -> 'json':
     ph_challengers_url =  'https://ph2.api.riotgames.com/tft/league/v1/challenger'
     ph_challengers_url = ph_challengers_url + '?api_key=' + api_key
 
@@ -133,8 +133,34 @@ def get_match_data(match_ids):
 
     return holder
 
+def simple_pipeline(match_data, filename):
+    # drop columns from double up
+    match_data = match_data[match_data.partner_group_id.isnull()]
+
+    # drop all empty rows and columns
+    match_data.dropna(how = 'all').dropna(axis = 'columns', how = 'all')
+
+    # write csv for data analysis
+    match_data.to_csv('unprocessed_' + filename, index = True)
+
+    # remove features that don't help with training the data
+    non_training_features = ['companion_content_ID', 'companion_item_ID',
+                             'companion_skin_ID', 'companion_species',
+                             'gold_left', 'players_eliminated']
+    for feature in non_training_features:
+        try:
+            match_data.drop(feature, axis = 'columns', inplace = True)
+        except:
+            continue
+
+    # write csv for placement estimator
+    match_data.to_csv('processed_' + filename, index = True)
+
 if __name__ == "__main__":
+
+    print('Enter API key:')
     api_key = input()
+
     challengers = get_challengers(api_key)
     chall_names = get_names(challengers)
     chall_puuids = get_puuid(chall_names)
