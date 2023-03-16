@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import requests
 from flatten_json import flatten
+### data pipeline
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline
 
 def get_challengers(api_key: 'string') -> 'json':
     ph_challengers_url =  'https://ph2.api.riotgames.com/tft/league/v1/challenger'
@@ -134,9 +137,6 @@ def get_match_data(match_ids):
 
     return match_data
 
-### data pipeline
-from sklearn.base import BaseEstimator, TransformerMixin
-
 class DoubleUpDropper(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y = None):
@@ -206,8 +206,6 @@ class DescribeMissing(BaseEstimator, TransformerMixin):
         print('Percent Missing of Data: ' + str(percent_missing))
 
         return X
-    
-from sklearn.pipeline import Pipeline
 
 pipe_analysis = Pipeline([
        ("double_up_dropper", DoubleUpDropper()),
@@ -319,7 +317,7 @@ if __name__ == "__main__":
         gm_match_data = get_match_data(gm_matches)
 
         processed_gm_match_data = use_data_pipeline(gm_match_data, 'gm_match_data')
-        
+
     except:
         print('Error occurred during ETL process.')
 
