@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import requests
 from flatten_json import flatten
 ### data pipeline
@@ -11,6 +11,7 @@ api_key = '' # Enter Riot API Key Here #
 ###
 
 def get_challengers(api_key: 'Riot API Key') -> 'json':
+
     ph_challengers_url =  'https://ph2.api.riotgames.com/tft/league/v1/challenger'
     ph_challengers_url = ph_challengers_url + '?api_key=' + api_key
 
@@ -22,6 +23,7 @@ def get_challengers(api_key: 'Riot API Key') -> 'json':
         print('Request has timed out.')
 
 def get_gms(api_key: 'Riot API Key') -> 'json':
+
     ph_gm_url = 'https://ph2.api.riotgames.com/tft/league/v1/grandmaster'
     ph_gm_url = ph_gm_url + '?api_key=' + api_key
 
@@ -33,6 +35,7 @@ def get_gms(api_key: 'Riot API Key') -> 'json':
         print('Request has timed out.')
 
 def get_names(players: 'json reply from Riot API') -> list:
+
     player_names = []
     players = players.get('entries')
     for i in range(len(players)):
@@ -42,6 +45,7 @@ def get_names(players: 'json reply from Riot API') -> list:
     return player_names
 
 def get_puuid(names: list) -> list:
+
     puuids = []
     for name in names:
         puuid_url = 'https://ph2.api.riotgames.com/tft/summoner/v1/summoners/by-name/'
@@ -56,6 +60,7 @@ def get_puuid(names: list) -> list:
     return final_puuids
 
 def get_match_ids(puuids: list) -> list:
+
     match_ids = []
     for puuid in puuids:
         match_url = 'https://sea.api.riotgames.com/tft/match/v1/matches/by-puuid/'
@@ -187,6 +192,7 @@ class CorruptedDropper(BaseEstimator, TransformerMixin):
             return X
         
 class ResetIndex(BaseEstimator, TransformerMixin):
+
     def fit(self, X, y = None):
         return self
     
@@ -243,6 +249,7 @@ class TrainDropper(BaseEstimator, TransformerMixin):
         return X
     
 class OutlierRemover(BaseEstimator, TransformerMixin):
+
     def fit(self, X, y = None):
         return self
     
@@ -254,6 +261,7 @@ class OutlierRemover(BaseEstimator, TransformerMixin):
         return X
 
 class GetAugmentDummies(BaseEstimator, TransformerMixin):
+
     def fit(self, X, y = None):
         return self
     
@@ -324,7 +332,3 @@ if __name__ == "__main__":
 
     except:
         print('Error occurred during ETL process.')
-
-
-
-
