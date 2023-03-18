@@ -6,7 +6,11 @@ from flatten_json import flatten
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
-def get_challengers(api_key: 'string') -> 'json':
+###
+api_key = '' # Enter Riot API Key Here #
+###
+
+def get_challengers(api_key: 'Riot API Key') -> 'json':
     ph_challengers_url =  'https://ph2.api.riotgames.com/tft/league/v1/challenger'
     ph_challengers_url = ph_challengers_url + '?api_key=' + api_key
 
@@ -17,7 +21,7 @@ def get_challengers(api_key: 'string') -> 'json':
     except:
         print('Request has timed out.')
 
-def get_gms(api_key):
+def get_gms(api_key: 'Riot API Key') -> 'json':
     ph_gm_url = 'https://ph2.api.riotgames.com/tft/league/v1/grandmaster'
     ph_gm_url = ph_gm_url + '?api_key=' + api_key
 
@@ -28,7 +32,7 @@ def get_gms(api_key):
     except:
         print('Request has timed out.')
 
-def get_names(players):
+def get_names(players: 'json reply from Riot API') -> list:
     player_names = []
     players = players.get('entries')
     for i in range(len(players)):
@@ -37,7 +41,7 @@ def get_names(players):
 
     return player_names
 
-def get_puuid(names):
+def get_puuid(names: list) -> list:
     puuids = []
     for name in names:
         puuid_url = 'https://ph2.api.riotgames.com/tft/summoner/v1/summoners/by-name/'
@@ -51,7 +55,7 @@ def get_puuid(names):
 
     return final_puuids
 
-def get_match_ids(puuids):
+def get_match_ids(puuids: list) -> list:
     match_ids = []
     for puuid in puuids:
         match_url = 'https://sea.api.riotgames.com/tft/match/v1/matches/by-puuid/'
@@ -61,7 +65,7 @@ def get_match_ids(puuids):
 
     return match_ids
 
-def get_match_data(match_ids):
+def get_match_data(match_ids: list) -> 'pandas DataFrame':
 
     match_data = pd.DataFrame()
 
@@ -137,6 +141,7 @@ def get_match_data(match_ids):
 
     return match_data
 
+### Data Pipeline Methods
 class DoubleUpDropper(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y = None):
@@ -207,6 +212,8 @@ class DescribeMissing(BaseEstimator, TransformerMixin):
 
         return X
 
+# Initialize first pipe
+
 pipe_analysis = Pipeline([
        ("double_up_dropper", DoubleUpDropper()),
        ("nandrop", NaNDropper()),
@@ -215,6 +222,7 @@ pipe_analysis = Pipeline([
        ("nanpercent", DescribeMissing())
 ])
 
+### Data Pipeline for ML
 class TrainDropper(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y = None):
@@ -255,13 +263,15 @@ class GetAugmentDummies(BaseEstimator, TransformerMixin):
 
         return X
 
+# Initialize ML Pipeline
+
 pipe_ml = Pipeline([
         ("name_dropper", TrainDropper()),
         ("outlier_dropper", OutlierRemover()),
         ("augmentdummies", GetAugmentDummies())
 ])
 
-def use_data_pipeline(match_data, filename):
+def use_data_pipeline(match_data: 'json', filename: str) -> 'pandas DataFrame':
 
     # use pipeline for data analysis
     pipe_analysis = Pipeline([
@@ -291,12 +301,6 @@ def use_data_pipeline(match_data, filename):
     return match_data
 
 if __name__ == "__main__":
-
-    print('Enter API key:')
-    api_key = ''
-
-    while api_key == '':
-        api_key = str(input())
 
     try:
         challengers = get_challengers(api_key)
