@@ -241,6 +241,7 @@ for column in merged_data:
 # drop some 'redundant' columns
 redundant = ['companion_content_ID', 'companion_item_ID', 'companion_skin_ID', 'last_round', 'players_eliminated']
 merged_data = merged_data.drop(redundant, axis = 'columns')
+merged_data = merged_data.reset_index(drop = True).copy()
 
 # Exploratory Questions
 '''
@@ -281,3 +282,17 @@ reroll 3 cost units), Featherweights 2 and 3 (since at high elo, the average lev
 4 cost carries), Velkoz Support (because the Velkoz unit is not very good), and Hacker and Mecha Prime emblems (not
 much immediate value.)
 '''
+# 2. Which companion_species have the highest winrate?
+print(merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True))
+'''
+PetBuglet has the highest winrate at 3.67, followed by Chibi Ashe and Burno. The lowest winrate tacticians are
+ElegantDragon, Chibi Ekko and Chibi Vi.
+'''
+
+# 3. What is the average player level at the end of the game?
+print(merged_data['level'].mean())
+'''
+It is roughly 7.976. The median is 8, and the mode is also 8.
+'''
+
+# 4. What is the most used trait?
