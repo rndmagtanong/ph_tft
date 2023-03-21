@@ -1,6 +1,6 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pylab as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
 plt.style.use('ggplot')
 pd.options.display.max_columns = 200
@@ -67,6 +67,7 @@ Soraka Support are picked heavily for AD and AP players respectively.
 '''
 
 print(augments1.tail(20), '\n', augments2.tail(20), '\n', augments3.tail(20))
+
 '''
 1b. Some of the losers at 2-1 are the Radiant Future Sight augment (since it requires a lot of thought most likely),
 the Rammus Carry Augment, and the Senna Carry augment.
@@ -78,6 +79,7 @@ reroll 3 cost units), Featherweights 2 and 3 (since at high elo, the average lev
 4 cost carries), Velkoz Support (because the Velkoz unit is not very good), and Hacker and Mecha Prime emblems (not
 much immediate value.)
 '''
+
 # 2. Which companion_species have the highest winrate?
 print(merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True))
 '''
@@ -106,11 +108,33 @@ Corrupted and Defender.
 
 # 5. Which puuid has the highest winrate with at least 50 games played?
 merged_data.groupby('puuid')['placement'].agg(['mean', 'count']).sort_values(by = 'count', ascending = False).head(20)
+
 '''
 The player with puuid ending with PQA has a 3.227273 average placement over 66 games. This is actually ARaye,
 the #1 player on the PH ladder. Another notable player has a 3.285714 average placement with puuid ending in
 HsA. This is Sophti, another Challenger player.
 '''
 
-# 6. Which augment has the highest winrate?
-augments = pd.concat([merged_data.iloc[:,0:3], merged_data['placement']], axis = 'columns')
+# 6. Which augment has the highest winrate? Lowest winrate?
+augment_placements = pd.concat([merged_data.iloc[:,0:3], merged_data['placement']], axis = 'columns')
+placements_1 = augment_placements[['augments_0', 'placement']]
+placements_1.columns = placements_1.columns.str.replace('_0', '')
+placements_2 = augment_placements[['augments_1', 'placement']]
+placements_2.columns = placements_1.columns.str.replace('_1', '')
+placements_3 = augment_placements[['augments_2', 'placement']]
+placements_3.columns = placements_1.columns.str.replace('_2', '')
+augment_averages = pd.concat([placements_1, placements_2, placements_3], axis = 'index').groupby('augments')['placement'] \
+    .agg(['mean', 'count']).sort_values(by = 'mean', ascending = True)
+augment_averages.head(40)
+
+'''
+Without caring about count, the highest winrate augment would be Preparation 3, picked once for a 1st place finish.
+Caring about count, Slow and Steady, Star Guardian Emblem, Spellslinger Emblem, and Big Friend 2 all show a good top 4 rate.
+'''
+
+augment_averages.tail(40)
+
+'''
+Some of the worst performing augments include Janna Carry, Leona Carry, Syndra Carry, Fiddlesticks Carry, Supers Soul, and
+Preparation 3.
+'''
