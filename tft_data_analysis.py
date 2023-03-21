@@ -129,7 +129,7 @@ It is roughly 7.976. The median is 8, and the mode is also 8.
 # 4. What are the most used traits? Least used traits?
 trait_names = [column for column in merged_data.columns if 'traits' in column and 'name' in column]
 trait_df = merged_data[trait_names].copy()
-trait_df.apply(pd.Series.value_counts).sum(axis = 'columns').sort_values(ascending = False)
+trait_df.apply(pd.Series.value_counts).sum(axis = 'columns').sort_values(ascending = False).plot(kind = 'bar')
 
 '''
 The top 10 most used traits are Aegis, Star Guardian, Mascot, Brawler, Threat, Ox Force, Underground, Prankster, Lasercorps,
@@ -140,7 +140,8 @@ Corrupted and Defender.
 '''
 
 # 5. Which puuid has the highest winrate with at least 50 games played?
-merged_data.groupby('puuid')['placement'].agg(['mean', 'count']).sort_values(by = 'count', ascending = False).head(20)
+merged_data.groupby('puuid')['placement'].agg(['mean', 'count']).sort_values(by = 'count', ascending = False).head(20) \
+    .plot(kind = 'barh', y = 'mean', title = 'Average Placement')
 
 '''
 The player with puuid ending with PQA has a 3.227273 average placement over 66 games. This is actually ARaye,
@@ -158,14 +159,19 @@ placements_3 = augment_placements[['augments_2', 'placement']]
 placements_3.columns = placements_1.columns.str.replace('_2', '')
 augment_averages = pd.concat([placements_1, placements_2, placements_3], axis = 'index').groupby('augments')['placement'] \
     .agg(['mean', 'count']).sort_values(by = 'mean', ascending = True)
-augment_averages.head(40)
+augment_averages.index = augment_averages.index.str.replace('...._Augment_', '', regex = True)
+augment_averages = augment_averages[augment_averages.index.str.contains("HyperRoll") == False]
+
+augment_averages.head(20).plot(kind = 'bar', y = 'mean')
+augment_averages.head(20).plot(kind = 'bar', y = 'count')
 
 '''
 Without caring about count, the highest winrate augment would be Preparation 3, picked once for a 1st place finish.
 Caring about count, Slow and Steady, Star Guardian Emblem, Spellslinger Emblem, and Big Friend 2 all show a good top 4 rate.
 '''
 
-augment_averages.tail(40)
+augment_averages.tail(20).plot(kind = 'bar', y = 'mean')
+augment_averages.tail(20).plot(kind = 'bar', y = 'count')
 
 '''
 Some of the worst performing augments include Janna Carry, Leona Carry, Syndra Carry, Fiddlesticks Carry, Supers Soul, and
