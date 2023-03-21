@@ -52,9 +52,24 @@ merged_data = merged_data.reset_index(drop = True).copy()
 # 1. What are the most picked augments at each stage?
 augments = merged_data.iloc[:,0:3]
 augments1 = augments['augments_0'].value_counts().to_frame()
+augments1.index = augments1.index.str.replace('...._Augment_', '', regex = True)
 augments2 = augments['augments_1'].value_counts().to_frame()
+augments2.index = augments2.index.str.replace('...._Augment_', '', regex = True)
 augments3 = augments['augments_2'].value_counts().to_frame()
-print(augments1.head(20), '\n', augments2.head(20), '\n', augments3.head(20))
+augments3.index = augments3.index.str.replace('...._Augment_', '', regex = True)
+
+ax1 = augments1.head(20).plot(kind = 'bar', title = 'Most Picked 2-1 Augments')
+ax1.set_xlabel('Augment')
+ax1.set_ylabel('Count')
+
+ax2 = augments2.head(20).plot(kind = 'bar', title = 'Most Picked 3-2 Augments')
+ax2.set_xlabel('Augment')
+ax2.set_ylabel('Count')
+
+ax3 = augments3.head(20).plot(kind = 'bar', title = 'Most Picked 4-2 Augments')
+ax3.set_xlabel('Augment')
+ax3.set_ylabel('Count')
+
 
 '''
 1a. Some of the most picked augments at 2-1 include True Twos and Threes Company (very high tempo augments), Portable Forge
@@ -67,9 +82,20 @@ Soraka Support are picked heavily for AD and AP players respectively.
 '''
 
 print(augments1.tail(20), '\n', augments2.tail(20), '\n', augments3.tail(20))
+ax4 = augments1.tail(20).plot(kind = 'bar', title = 'Least Picked 2-1 Augments')
+ax4.set_xlabel('Augment')
+ax4.set_ylabel('Count')
+
+ax5 = augments2.tail(20).plot(kind = 'bar', title = 'Least Picked 3-2 Augments')
+ax5.set_xlabel('Augment')
+ax5.set_ylabel('Count')
+
+ax6 = augments3.tail(20).plot(kind = 'bar', title = 'Least Picked 4-2 Augments')
+ax6.set_xlabel('Augment')
+ax6.set_ylabel('Count')
 
 '''
-1b. Some of the losers at 2-1 are the Radiant Future Sight augment (since it requires a lot of thought most likely),
+1b. Some of the least picked augments at 2-1 are the Radiant Future Sight augment (since it requires a lot of thought ), 
 the Rammus Carry Augment, and the Senna Carry augment.
 At 3-2, some notable low pick-rate augments include Preparation 3 (since you already have an established board),
 the Sett and Zac carry augments (since they are "not good units" for carrying), and Big Friend 2 (usually a better
@@ -82,6 +108,9 @@ much immediate value.)
 
 # 2. Which companion_species have the highest winrate?
 print(merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True))
+
+#ax7 = merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True)
+
 '''
 PetBuglet has the highest winrate at 3.67, followed by Chibi Ashe and Burno. The lowest winrate tacticians are
 ElegantDragon, Chibi Ekko and Chibi Vi.
@@ -89,6 +118,10 @@ ElegantDragon, Chibi Ekko and Chibi Vi.
 
 # 3. What is the average player level at the end of the game?
 print(merged_data['level'].mean())
+
+ax8 = merged_data['level'].plot(kind = 'hist', title = 'Average Player Level')
+ax8.set_xlabel('Level')
+
 '''
 It is roughly 7.976. The median is 8, and the mode is also 8.
 '''
