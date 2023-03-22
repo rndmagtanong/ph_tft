@@ -38,6 +38,8 @@ for column in merged_data:
 redundant = ['companion_content_ID', 'companion_item_ID', 'companion_skin_ID', 'last_round', 'players_eliminated']
 merged_data = merged_data.drop(redundant, axis = 'columns')
 merged_data = merged_data.reset_index(drop = True).copy()
+merged_data = merged_data.replace('...._Augment_', '', regex = True)
+merged_data.to_excel("tableau_data.xlsx")
 
 # Exploratory Questions
 '''
