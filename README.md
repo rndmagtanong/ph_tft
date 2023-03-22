@@ -15,6 +15,10 @@ An ETL pipeline was built to get match data of PH Challenger/GM+ players for the
 - [x] Extract Match Data using Riot Developer API
 - [x] Create ETL Pipeline to automatically preprocess and write to .csv
 - [x] Perform Exploratory Data Analysis
-- [ ] Create Tableau Dashboard for Match Analysis
+- [ ] Create Tableau Dashboard for Match Analysis (In Progress)
 - [ ] Choose and Train Model for Placement Predictor
 - [ ] Finish README 
+
+## Tableau Dashboard (WIP)
+
+[Augment Analysis](https://public.tableau.com/views/PHTFTAnalysis/2-1Augments?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link)
