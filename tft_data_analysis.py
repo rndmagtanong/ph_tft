@@ -119,7 +119,7 @@ ElegantDragon, Chibi Ekko and Chibi Vi.
 '''
 
 # 3. What is the average player level at the end of the game?
-print(merged_data['level'].mean())
+print('The average player level is ' + str(merged_data['level'].mean()) + '.')
 
 ax8 = merged_data['level'].plot(kind = 'hist', title = 'Average Player Level')
 ax8.set_xlabel('Level')
