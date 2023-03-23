@@ -17,7 +17,7 @@ cols_to_use = \
  'augments_2',
 #  'last_round',
  'level',
-#  'placement', <--- this is the target
+ 'placement', # <--- this is the target
 #  'puuid',
 #  'time_eliminated',
 #  'total_damage_to_players',
@@ -158,8 +158,30 @@ X = X_full[cols_to_use]
 
 # convert dtypes of discrete columns
 for colname in list(X.select_dtypes("float64")):
-    X[colname] = X[colname].apply(np.int64).copy()
+    X[colname] = X[colname].astype(float).astype("Int64")
 
-# create new features
+# convert dtypes to categorical
+for colname in X.select_dtypes("object"):
+    X[colname] = X[colname].astype("category")
 
-X['total_items'] = []
+# create new feature for total item number
+item_columns = [column for column in X.columns if 'item' in column]
+X['total_items'] = X[item_columns].count(axis = 'columns').copy()
+
+# select target
+y = X.placement
+
+X.drop('placement', axis = 'columns')
+
+# Create training and validation sets
+from sklearn.model_selection import train_test_split
+
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, stratify = y)
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+
+forest_model = RandomForestRegressor(random_state = 1)
+forest_model.fit(X_train, y_train)
+place_preds = forest_model.predict(X_valid)
+print(mean_absolute_error(y_valid, place_preds))
