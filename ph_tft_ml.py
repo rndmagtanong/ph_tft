@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+pd.options.display.max_columns = 200
+pd.options.display.max_rows = 200
 
 # read and concat data
 X_chall = pd.read_csv('processed_challenger_match_data.csv')
@@ -160,28 +162,35 @@ X = X_full[cols_to_use]
 for colname in list(X.select_dtypes("float64")):
     X[colname] = X[colname].astype(float).astype("Int64")
 
-# convert dtypes to categorical
-for colname in X.select_dtypes("object"):
-    X[colname] = X[colname].astype("category")
-
 # create new feature for total item number
 item_columns = [column for column in X.columns if 'item' in column]
 X['total_items'] = X[item_columns].count(axis = 'columns').copy()
+X = X.drop(item_columns, axis = 'columns')
+
+# change NaNs of categoricals
+X = X.fillna(0)
+
+# one-hot encoding of categoricals
+categoricals = [column for column in X.columns if ('augments' in column) or ('name' in column) or ('id' in column)]
+X = pd.get_dummies(X, columns = categoricals)
+X = X.replace(np.nan, 0)
 
 # select target
 y = X.placement
 
-X.drop('placement', axis = 'columns')
+X = X.drop('placement', axis = 'columns')
+
+###
 
 # Create training and validation sets
 from sklearn.model_selection import train_test_split
 
-X_train, X_valid, y_train, y_valid = train_test_split(X, y, stratify = y)
+X_train, X_valid, y_train, y_valid = train_test_split(X, y)
 
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error
 
-forest_model = RandomForestRegressor(random_state = 1)
+forest_model = RandomForestClassifier(random_state = 1)
 forest_model.fit(X_train, y_train)
 place_preds = forest_model.predict(X_valid)
 print(mean_absolute_error(y_valid, place_preds))
