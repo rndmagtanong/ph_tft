@@ -126,7 +126,7 @@ cols_to_use = \
 #  'units_8_name',
  'units_8_rarity',
  'units_8_tier',
-#  'traits_11_name',
+ 'traits_11_name',
  'traits_11_num_units',
 #  'traits_11_style',
 #  'traits_11_tier_current',
@@ -187,40 +187,82 @@ X = X.drop('placement', axis = 'columns')
 # Create training and validation sets
 from sklearn.model_selection import train_test_split
 
-X_train, X_valid, y_train, y_valid = train_test_split(X, y)
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size = 0.20, random_state = 0)
 
+
+# Build Random Forest Model with hyperparameters
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error
 
-forest_model = RandomForestClassifier(random_state = 1)
-forest_model.fit(X_train, y_train)
-place_preds = forest_model.predict(X_valid)
-print(mean_absolute_error(y_valid, place_preds))
+# Number of trees in random forest
+n_estimators = [int(x) for x in np.linspace(start = 10, stop = 80, num = 10)]
+# Number of features to consider at every split
+max_features = ['auto', 'sqrt']
+# Maximum number of levels in tree
+max_depth = [2,4]
+# Minimum number of samples required to split a node
+min_samples_split = [2,5]
+# Minimum number of samples required at each leaf node
+min_samples_leaf = [1,2]
+# Method of selecting samples for training each tree
+bootstrap = [True, False]
 
-# Cross validation attempt
+# Create the random grid
+param_grid = {
+    'n_estimators' : n_estimators,
+    'max_features' : max_features,
+    'max_depth' : max_depth,
+    'min_samples_split' : min_samples_split,
+    'min_samples_leaf' : min_samples_leaf,
+    'bootstrap' : bootstrap
+}
 
-from sklearn.pipeline import Pipeline
+forest_model = RandomForestClassifier()
 
-my_pipeline = Pipeline(steps=[
-    ('model', RandomForestClassifier(n_estimators = 50, random_state = 0))
-])
+from sklearn.model_selection import GridSearchCV
+rf_grid = GridSearchCV(estimator = forest_model, param_grid = param_grid, cv = 3, verbose = 2, n_jobs = 4)
 
-from sklearn.model_selection import cross_val_score
-# Multiply by -1 since sklearn calculates *negative* MAE
-scores = -1 * cross_val_score(my_pipeline, X, y,
-                              cv = 5,
-                              scoring='neg_mean_absolute_error')
+rf_grid.fit(X_train, y_train)
 
-print("MAE scores:\n", scores)
+rf_grid.best_params_
 
-print("Average MAE score (across experiments):")
-print(scores.mean())
+print(f'Train Accuracy - : {rf_grid.score(X_train, y_train):.3f}')
+print(f'Test Accuracy - : {rf_grid.score(X_valid, y_valid):.3f}')
 
-# confusion matrix
-from sklearn.metrics import confusion_matrix
-conf_mat = confusion_matrix(y_valid, place_preds)
-sns.heatmap(conf_mat, annot = True, fmt = 'g')
-plt.title('Confusion Matrix of Placement Predictor')
-plt.ylabel('Real Place')
-plt.xlabel('Predicted Place')
-plt.show()
+# forest_model = RandomForestClassifier(random_state = 1)
+# forest_model.fit(X_train, y_train)
+# place_preds = forest_model.predict(X_valid)
+# print(mean_absolute_error(y_valid, place_preds))
+
+# # Cross validation
+
+# from sklearn.pipeline import Pipeline
+
+# my_pipeline = Pipeline(steps=[
+#     ('model', RandomForestClassifier(n_estimators = 100, random_state = 0))
+# ])
+
+# from sklearn.model_selection import cross_val_score
+# # Multiply by -1 since sklearn calculates *negative* MAE
+# scores = -1 * cross_val_score(my_pipeline, X, y,
+#                               cv = 5,
+#                               scoring='neg_mean_absolute_error')
+
+# print("MAE scores:\n", scores)
+
+# print("Average MAE score (across experiments):")
+# print(scores.mean())
+
+# # confusion matrix
+# from sklearn.metrics import confusion_matrix
+# conf_mat = confusion_matrix(y_valid, place_preds)
+# sns.heatmap(conf_mat, annot = True, fmt = 'g')
+# plt.title('Confusion Matrix of Placement Predictor')
+# plt.ylabel('Real Place')
+# plt.xlabel('Predicted Place')
+# plt.show()
+
+# # accuracy score
+# from sklearn.metrics import accuracy_score
+
+# print("Accuracy of model:", accuracy_score(y_valid, place_preds))
