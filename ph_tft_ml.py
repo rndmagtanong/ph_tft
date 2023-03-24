@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 pd.options.display.max_columns = 200
 pd.options.display.max_rows = 200
@@ -194,3 +196,31 @@ forest_model = RandomForestClassifier(random_state = 1)
 forest_model.fit(X_train, y_train)
 place_preds = forest_model.predict(X_valid)
 print(mean_absolute_error(y_valid, place_preds))
+
+# Cross validation attempt
+
+from sklearn.pipeline import Pipeline
+
+my_pipeline = Pipeline(steps=[
+    ('model', RandomForestClassifier(n_estimators = 50, random_state = 0))
+])
+
+from sklearn.model_selection import cross_val_score
+# Multiply by -1 since sklearn calculates *negative* MAE
+scores = -1 * cross_val_score(my_pipeline, X, y,
+                              cv = 5,
+                              scoring='neg_mean_absolute_error')
+
+print("MAE scores:\n", scores)
+
+print("Average MAE score (across experiments):")
+print(scores.mean())
+
+# confusion matrix
+from sklearn.metrics import confusion_matrix
+conf_mat = confusion_matrix(y_valid, place_preds)
+sns.heatmap(conf_mat, annot = True, fmt = 'g')
+plt.title('Confusion Matrix of Placement Predictor')
+plt.ylabel('Real Place')
+plt.xlabel('Predicted Place')
+plt.show()
