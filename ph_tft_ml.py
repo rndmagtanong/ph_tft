@@ -3,6 +3,13 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import mean_absolute_error
+
 pd.options.display.max_columns = 200
 pd.options.display.max_rows = 200
 
@@ -179,29 +186,30 @@ X = X.replace(np.nan, 0)
 
 # select target
 y = X.placement
-
 X = X.drop('placement', axis = 'columns')
+
+# create classifications with 8 bins, 4 bins and 2 bins
+y8 = y # 8 possible classifications
+y4 = y.replace({1:1, 2:1, 3:2, 4:2, 5:3, 6:3, 7:4, 8:4}) # 4 possible classifications
+y2 = y.replace({1:1, 2:1, 3:1, 4:1, 5:2, 6:2, 7:2, 8:2}) # 2 possible classifications
 
 ###
 
-# Create training and validation sets
-from sklearn.model_selection import train_test_split
-
-X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size = 0.20, random_state = 0)
-
+# Create training and validation sets for y = 8 classes
+X8_train, X8_valid, y8_train, y8_valid = train_test_split(X, y8, test_size = 0.20, random_state = 0)
+X4_train, X4_valid, y4_train, y4_valid = train_test_split(X, y4, test_size = 0.20, random_state = 0)
+X2_train, X2_valid, y2_train, y2_valid = train_test_split(X, y2, test_size = 0.20, random_state = 0)
 
 # Build Random Forest Model with hyperparameters
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import mean_absolute_error
 
 # Number of trees in random forest
-n_estimators = [int(x) for x in np.linspace(start = 10, stop = 80, num = 10)]
+n_estimators = [10, 100, 200]
 # Number of features to consider at every split
 max_features = ['auto', 'sqrt']
 # Maximum number of levels in tree
-max_depth = [2,4]
+max_depth = [None]
 # Minimum number of samples required to split a node
-min_samples_split = [2,5]
+min_samples_split = [2,4]
 # Minimum number of samples required at each leaf node
 min_samples_leaf = [1,2]
 # Method of selecting samples for training each tree
@@ -222,47 +230,35 @@ forest_model = RandomForestClassifier()
 from sklearn.model_selection import GridSearchCV
 rf_grid = GridSearchCV(estimator = forest_model, param_grid = param_grid, cv = 3, verbose = 2, n_jobs = 4)
 
-rf_grid.fit(X_train, y_train)
+rf_grid8 = rf_grid.fit(X8_train, y8_train)
+rf_grid4 = rf_grid.fit(X4_train, y4_train)
+rf_grid2 = rf_grid.fit(X2_train, y2_train)
 
-rf_grid.best_params_
+rf_grid8.best_params_
+rf_grid4.best_params_
+rf_grid2.best_params_
 
-print(f'Train Accuracy - : {rf_grid.score(X_train, y_train):.3f}')
-print(f'Test Accuracy - : {rf_grid.score(X_valid, y_valid):.3f}')
+def scoring(rf_grid, X_train, y_train, X_valid, y_valid):
+    print(f'Train Accuracy - : {rf_grid.score(X_train, y_train):.3f}')
+    print(f'Test Accuracy - : {rf_grid.score(X_valid, y_valid):.3f}')
 
-# forest_model = RandomForestClassifier(random_state = 1)
-# forest_model.fit(X_train, y_train)
-# place_preds = forest_model.predict(X_valid)
-# print(mean_absolute_error(y_valid, place_preds))
+    y_pred = rf_grid.best_estimator_.predict(X_valid)
 
-# # Cross validation
+    # mean absolute error
 
-# from sklearn.pipeline import Pipeline
+    mae = mean_absolute_error(y_valid, y_pred)
 
-# my_pipeline = Pipeline(steps=[
-#     ('model', RandomForestClassifier(n_estimators = 100, random_state = 0))
-# ])
+    # confusion matrix
+    conf_mat = confusion_matrix(y_valid, y_pred)
+    sns.heatmap(conf_mat, annot = True, fmt = 'g')
+    plt.title('Confusion Matrix of Placement Predictor')
+    plt.ylabel('Real Place')
+    plt.xlabel('Predicted Place')
+    plt.show()
 
-# from sklearn.model_selection import cross_val_score
-# # Multiply by -1 since sklearn calculates *negative* MAE
-# scores = -1 * cross_val_score(my_pipeline, X, y,
-#                               cv = 5,
-#                               scoring='neg_mean_absolute_error')
+    # accuracy score
+    print("Accuracy of model:", accuracy_score(y_valid, y_pred))
 
-# print("MAE scores:\n", scores)
-
-# print("Average MAE score (across experiments):")
-# print(scores.mean())
-
-# # confusion matrix
-# from sklearn.metrics import confusion_matrix
-# conf_mat = confusion_matrix(y_valid, place_preds)
-# sns.heatmap(conf_mat, annot = True, fmt = 'g')
-# plt.title('Confusion Matrix of Placement Predictor')
-# plt.ylabel('Real Place')
-# plt.xlabel('Predicted Place')
-# plt.show()
-
-# # accuracy score
-# from sklearn.metrics import accuracy_score
-
-# print("Accuracy of model:", accuracy_score(y_valid, place_preds))
+scoring(rf_grid, X8_train, y8_train, X8_valid, y8_valid)
+scoring(rf_grid, X4_train, y4_train, X4_valid, y4_valid)
+scoring(rf_grid, X2_train, y2_train, X2_valid, y2_valid)
