@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
 ###
-api_key = '' # Enter Riot API Key Here #
+api_key = 'RGAPI' # Enter Riot API Key Here #
 ###
 
 def get_challengers(api_key: 'Riot API Key') -> 'json':
