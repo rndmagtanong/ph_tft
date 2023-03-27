@@ -26,7 +26,7 @@ Since this process could and should be done repeatedly, a pipeline was created u
 
 From here, another pipeline is used to created the dataset for the machine learning model. This pipeline deletes columns with cosmetic features that do not affect the result of the game, and columns that have only 10% of its data filled. 
 
-All this can then be done by adding a valid Riot Developer API then running the script. The output will be four *.csv* files, containing match data of the best players in the PH region.
+All this can then be done by adding a valid Riot Developer API key then running the script. The output will be four *.csv* files, containing match data of the best players in the PH region.
 
 ## Exploratory Data Analysis
 
@@ -40,3 +40,13 @@ With the data collected, it's time to glean insight from them. Some interesting 
 6. Which augment has the highest winrate?
 
 ### Most Picked Augments
+
+### Least Picked Augments
+
+### Species Placement
+
+### Most Used Trait
+
+### Highest WR Player
+
+### Highest WR Augment
