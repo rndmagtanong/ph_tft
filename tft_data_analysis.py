@@ -2,10 +2,12 @@ import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
 plt.style.use('ggplot')
 pd.options.display.max_columns = 200
 pd.options.display.max_rows = 200
 
+# read data in
 ph_tft_challenger_data = pd.read_csv('unprocessed_challenger_match_data.csv')
 ph_tft_gm_data = pd.read_csv('unprocessed_gm_match_data.csv')
 
@@ -111,7 +113,8 @@ much immediate value.)
 # 2. Which companion_species have the highest winrate?
 print(merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True))
 
-#ax7 = merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True)
+ax7 = merged_data.groupby('companion_species')['placement'].agg(['mean', 'count']).sort_values(by = 'mean', ascending = True)
+ax7.head(20).plot(kind = 'bar', y = 'mean', title = 'Species Mean Placement', xlabel = 'Species', ylabel = 'Placement')
 
 '''
 PetBuglet has the highest winrate at 3.67, followed by Chibi Ashe and Burno. The lowest winrate tacticians are
@@ -131,7 +134,8 @@ It is roughly 7.976. The median is 8, and the mode is also 8.
 # 4. What are the most used traits? Least used traits?
 trait_names = [column for column in merged_data.columns if 'traits' in column and 'name' in column]
 trait_df = merged_data[trait_names].copy()
-trait_df.apply(pd.Series.value_counts).sum(axis = 'columns').sort_values(ascending = False).plot(kind = 'bar')
+trait_df.apply(pd.Series.value_counts).sum(axis = 'columns').sort_values(ascending = False) \
+    .plot(kind = 'bar', title = 'Trait Counts', xlabel = 'Traits', ylabel = 'Frequency')
 
 '''
 The top 10 most used traits are Aegis, Star Guardian, Mascot, Brawler, Threat, Ox Force, Underground, Prankster, Lasercorps,
@@ -164,16 +168,15 @@ augment_averages = pd.concat([placements_1, placements_2, placements_3], axis = 
 augment_averages.index = augment_averages.index.str.replace('...._Augment_', '', regex = True)
 augment_averages = augment_averages[augment_averages.index.str.contains("HyperRoll") == False]
 
-augment_averages.head(20).plot(kind = 'bar', y = 'mean')
-augment_averages.head(20).plot(kind = 'bar', y = 'count')
+augment_averages.head(20).plot(kind = 'bar', title = 'Augment Placements', y = 'mean', ylabel = 'Placement')
+augment_averages.head(20).plot(kind = 'bar', title = 'Augment Frequency', y = 'count', ylabel = 'Frequency')
 
 '''
-Without caring about count, the highest winrate augment would be Preparation 3, picked once for a 1st place finish.
 Caring about count, Slow and Steady, Star Guardian Emblem, Spellslinger Emblem, and Big Friend 2 all show a good top 4 rate.
 '''
 
-augment_averages.tail(20).plot(kind = 'bar', y = 'mean')
-augment_averages.tail(20).plot(kind = 'bar', y = 'count')
+augment_averages.tail(20).plot(kind = 'bar', title = 'Low Augment Placements', y = 'mean', ylabel = 'Placement')
+augment_averages.tail(20).plot(kind = 'bar', title = 'Low Augment Frequency', y = 'count', ylabel = 'Frequency')
 
 '''
 Some of the worst performing augments include Janna Carry, Leona Carry, Syndra Carry, Fiddlesticks Carry, Supers Soul, and
