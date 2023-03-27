@@ -293,7 +293,7 @@ def use_data_pipeline(match_data: 'json', filename: str) -> 'pandas DataFrame':
     match_data = pipe_analysis.fit_transform(match_data)
 
     # write csv for data analysis
-    match_data.to_csv('unprocessed_' + filename + '.csv', index = False)
+    match_data.to_csv('data/unprocessed_' + filename + '.csv', index = False)
 
     pipe_ml = Pipeline([
             ("name_dropper", TrainDropper()),
@@ -304,7 +304,7 @@ def use_data_pipeline(match_data: 'json', filename: str) -> 'pandas DataFrame':
     match_data = pipe_ml.fit_transform(match_data)
 
     # write csv for placement estimator
-    match_data.to_csv('processed_' + filename + '.csv', index = False)
+    match_data.to_csv('data/processed_' + filename + '.csv', index = False)
 
     return match_data
 

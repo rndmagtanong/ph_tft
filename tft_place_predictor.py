@@ -35,8 +35,8 @@ def scoring(rf_grid, X_train, y_train, X_valid, y_valid):
     print("Mean Average Error: ", mae)
 
 # read and concat data
-X_chall = pd.read_csv('processed_challenger_match_data.csv')
-X_gm = pd.read_csv('processed_gm_match_data.csv')
+X_chall = pd.read_csv('data/processed_challenger_match_data.csv')
+X_gm = pd.read_csv('data/processed_gm_match_data.csv')
 X_full = pd.concat([X_chall, X_gm], axis = 'index')
 
 # remove duplicates

@@ -8,8 +8,8 @@ pd.options.display.max_columns = 200
 pd.options.display.max_rows = 200
 
 # read data in
-ph_tft_challenger_data = pd.read_csv('unprocessed_challenger_match_data.csv')
-ph_tft_gm_data = pd.read_csv('unprocessed_gm_match_data.csv')
+ph_tft_challenger_data = pd.read_csv('data/unprocessed_challenger_match_data.csv')
+ph_tft_gm_data = pd.read_csv('data/unprocessed_gm_match_data.csv')
 
 # merge dataframes
 merged_data = pd.concat([ph_tft_challenger_data, ph_tft_gm_data], ignore_index = True)
@@ -41,7 +41,7 @@ redundant = ['companion_content_ID', 'companion_item_ID', 'companion_skin_ID', '
 merged_data = merged_data.drop(redundant, axis = 'columns')
 merged_data = merged_data.reset_index(drop = True).copy()
 merged_data = merged_data.replace('...._Augment_', '', regex = True)
-merged_data.to_excel("tableau_data.xlsx")
+merged_data.to_excel("data/tableau_data.xlsx")
 
 # Exploratory Questions
 '''
