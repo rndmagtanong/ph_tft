@@ -279,7 +279,7 @@ pipe_ml = Pipeline([
         ("augmentdummies", GetAugmentDummies())
 ])
 
-def use_data_pipeline(match_data: 'json', filename: str) -> 'pandas DataFrame':
+def use_data_pipeline(match_data: 'json', filename: str) -> 'DataFrame':
 
     # use pipeline for data analysis
     pipe_analysis = Pipeline([
