@@ -39,14 +39,40 @@ With the data collected, it's time to glean insight from them. Some interesting 
 5. Which puuid has the highest winrate with at least 50 games played?
 6. Which augment has the highest winrate?
 
+Please check the results section for the graphs.
+
+## Placement Predictor
+
+## Results
+
 ### Most Picked Augments
+![Most Picked Augments at 2-1](eda/most_picked_2-1.png)
+
+![Most Picked Augments at 3-2](eda/most_picked_3-2.png)
+
+![Most Picked Augments at 4-2](eda/most_picked_4-2.png)
 
 ### Least Picked Augments
+![Least Picked Augments at 2-1](eda/least_picked_2-1.png)
+
+![Least Picked Augments at 2-1](eda/least_picked_3-2.png)
+
+![Least Picked Augments at 2-1](eda/least_picked_4-2.png)
 
 ### Species Placement
+![Species Placement](eda/species_placement.png)
 
 ### Most Used Trait
+![Most/Least Used Traits](eda/trait_frequency.png)
 
 ### Highest WR Player
+![Player WR](eda/player_ave_placement.png)
 
 ### Highest WR Augment
+![High WR Augment Place](eda/augment_top4_placements.png)
+
+![High WR Augment Count](eda/augment_top4_freq.png)
+
+![Low WR Augment Place](eda/augment_bot4_placements.png)
+
+![Low WR Augment Count](eda/augment_bot4_freq.png)
